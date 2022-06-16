@@ -29,6 +29,9 @@ const tileSize = 16 * scale;
 const canvasWidth = levelWidth * tileSize;
 const canvasHeight = levelHeight * tileSize;
 
+const FRICTION = 0.9;
+const GRAVITY = 2;
+
 const canvas = document.createElement('canvas');
 canvas.width = canvasWidth;
 canvas.height = canvasHeight;
@@ -42,7 +45,52 @@ const player = {
   x: canvasWidth / 2,
   y: canvasHeight / 2,
   velocityX: 0,
-  velocityY: 0
+  velocityY: 0,
+  isJumping: false,
+  update() {
+    this.velocityY += GRAVITY;
+    this.x += this.velocityX;
+    this.y += this.velocityY;
+
+    this.velocityX *= FRICTION;
+    this.velocityY *= FRICTION;
+
+    if (this.x <= 0) {
+      this.x = 0;
+      this.velocityX = 0;
+    } 
+    
+    if (this.x + (tileSize / 2) >= canvasWidth) {
+      this.x = canvasWidth - (tileSize / 2);
+      this.velocityX = 0;
+    }
+
+    if (this.y <= 0) {
+      this.y = 0;
+      this.velocityY = 0;
+    }
+    
+    if (this.y + (tileSize / 2) >= canvasHeight) {
+      this.y = canvasHeight - (tileSize / 2);
+      this.velocityY = 0;
+    }
+
+    if (this.velocityY === 0) {
+      this.isJumping = false;
+    }
+  },
+  moveLeft() {
+    this.velocityX -= 2;
+  },
+  moveRight() {
+    this.velocityX += 2;
+  },
+  jump() {
+    if (!this.isJumping) {
+      this.isJumping = true;
+      this.velocityY -= 40;
+    }
+  }
 }
 
 function tick(timestamp) {
@@ -54,21 +102,18 @@ function tick(timestamp) {
 
 function update() {
   if (keyboard[37]) {
-    // left
-    player.x -= 2;
+    player.moveLeft();
   }
 
   if (keyboard[39]) {
-    // right
-    player.x += 2;
+    player.moveRight();
   }
 
   if (keyboard[32]) {
-    // space
-    player.y -= 2;
+    player.jump();
   }
-  player.x += player.velocityX;
-  player.y += player.velocityY;
+
+  player.update();
 }
 
 function clear() {
